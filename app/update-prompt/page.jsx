@@ -1,31 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/router"; // Change to useRouter from next/router
+import { useSearchParams } from "react-router-dom"; // Change to useSearchParams from react-router-dom
 
 import Form from "@components/Form";
 
 const UpdatePrompt = () => {
   const router = useRouter();
+  const [promptId, setPromptId] = useState(null); // State to hold promptId
   const searchParams = useSearchParams();
-  const promptId = searchParams.get("id");
+  const promptIdParam = searchParams.get("id");
 
   const [post, setPost] = useState({ prompt: "", tag: "" });
   const [submitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const getPromptDetails = async () => {
-      const response = await fetch(`/api/prompt/${promptId}`);
-      const data = await response.json();
+    // Update promptId state when promptIdParam changes
+    if (promptIdParam) {
+      setPromptId(promptIdParam);
+    }
+  }, [promptIdParam]);
 
-      setPost({
-        prompt: data.prompt,
-        tag: data.tag,
-      });
+  useEffect(() => {
+    const getPromptDetails = async () => {
+      if (!promptId) return; // Exit if promptId is null
+
+      try {
+        const response = await fetch(`/api/prompt/${promptId}`);
+        const data = await response.json();
+
+        setPost({
+          prompt: data.prompt,
+          tag: data.tag,
+        });
+      } catch (error) {
+        console.log(error);
+      }
     };
 
-    if (promptId) getPromptDetails();
-  }, [promptId]);
+    getPromptDetails();
+  }, [promptId]); // Run effect when promptId changes
 
   const updatePrompt = async (e) => {
     e.preventDefault();
